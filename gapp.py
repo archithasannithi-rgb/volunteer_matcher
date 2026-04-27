@@ -66,8 +66,9 @@ def predict():
             "explanation": response.text
         })
 
-    except Exception as e:
-    print("FULL ERROR:", str(e))
+except Exception as e:
+    import traceback
+    print(traceback.format_exc())
     return jsonify({'error': str(e)}), 500
 
 # --- 4. RUN APP ---

@@ -13,7 +13,7 @@ app = Flask(__name__)
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 # --- TRAIN MODEL ---
-df = pd.read_csv("volunteer_match.csv")   # make sure filename matches GitHub exactly
+df = pd.read_csv("Volunteer_match.csv")   # make sure filename matches GitHub exactly
 X = df["Skills"]
 y = df["Type of Organization"]
 

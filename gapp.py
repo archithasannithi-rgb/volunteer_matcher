@@ -67,9 +67,8 @@ def predict():
         })
 
 except Exception as e:
-    import traceback
-    print(traceback.format_exc())
-    return jsonify({'error': str(e)}), 500
+    print(f"Error: {e}")
+    return jsonify({'error': 'An internal error occurred. Please try again.'}), 500
 
 # --- 4. RUN APP ---
 if __name__ == "__main__":

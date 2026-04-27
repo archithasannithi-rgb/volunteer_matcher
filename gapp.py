@@ -1,4 +1,5 @@
 import os
+import traceback
 import pandas as pd
 from flask import Flask, request, jsonify, render_template
 from google import genai
@@ -8,26 +9,31 @@ from sklearn.ensemble import RandomForestClassifier
 
 app = Flask(__name__)
 
-# --- 1. GEMINI CONFIGURATION ---
+# --- GEMINI CONFIGURATION ---
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# --- 2. TRAIN MODEL ---
-df = pd.read_csv("Volunteer_match.csv")
+# --- TRAIN MODEL ---
+df = pd.read_csv("volunteer_match.csv")   # make sure filename matches GitHub exactly
 X = df["Skills"]
 y = df["Type of Organization"]
 
 model = Pipeline(steps=[
     ("tfidf", TfidfVectorizer(stop_words="english", ngram_range=(1, 3))),
-    ("classifier", RandomForestClassifier(n_estimators=200, random_state=42, class_weight="balanced"))
+    ("classifier", RandomForestClassifier(
+        n_estimators=200,
+        random_state=42,
+        class_weight="balanced"
+    ))
 ])
 
 model.fit(X, y)
 
-# --- 3. ROUTES ---
+# --- HOME ROUTE ---
 @app.route("/")
 def home():
     return render_template("gindex.html")
 
+# --- PREDICT ROUTE ---
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -49,28 +55,39 @@ def predict():
         skills = data.get("skills", "")
         prediction = model.predict([skills])[0]
 
-        # Gemini explanation
-        prompt = (
-            f"Volunteer {data.get('name')} (Age: {user_age}, City: {data.get('city')}) "
-            f"with skills '{skills}' matched to '{prediction}'. "
-            f"Explain why in 2 short sentences."
-        )
+        # Default explanation
+        explanation = f"This volunteer is suitable for {prediction} based on their skills and profile."
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+        # Gemini explanation (safe fallback)
+        try:
+            prompt = (
+                f"Volunteer {data.get('name')} (Age: {user_age}, City: {data.get('city')}) "
+                f"with skills '{skills}' matched to '{prediction}'. "
+                f"Explain why in 2 short sentences."
+            )
+
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+
+            if response.text:
+                explanation = response.text
+
+        except Exception as gemini_error:
+            print(f"Gemini Error: {gemini_error}")
 
         return jsonify({
             "match": str(prediction),
-            "explanation": response.text
+            "explanation": explanation
         })
 
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({'error': 'An internal error occurred. Please try again.'}), 500
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
 
-# --- 4. RUN APP ---
+
+# --- RUN APP ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)

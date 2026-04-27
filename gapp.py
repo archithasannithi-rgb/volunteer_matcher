@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from google import genai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
@@ -26,7 +26,7 @@ model.fit(X, y)
 # --- 3. ROUTES ---
 @app.route("/")
 def home():
-    return send_from_directory("front_end", "gindex.html")
+    return render_template("gindex.html")
 
 @app.route("/predict", methods=["POST"])
 def predict():

@@ -66,7 +66,7 @@ def predict():
             "explanation": response.text
         })
 
-except Exception as e:
+    except Exception as e:
     print(f"Error: {e}")
     return jsonify({'error': 'An internal error occurred. Please try again.'}), 500
 

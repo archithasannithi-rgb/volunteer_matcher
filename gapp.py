@@ -9,7 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 app = Flask(__name__)
 
 # --- 1. GEMINI CONFIGURATION ---
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.getenv("AIzaSyAhnd9lFesGXsWyhobdACBmYQYq_uVtyDc"))
 
 # --- 2. TRAIN MODEL ---
 df = pd.read_csv("Volunteer_match.csv")
